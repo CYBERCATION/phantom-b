@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PHANTOM-B Workshop</title>
+<meta name="description" content="A free, browser-only facilitation tool for threat modelling the LLM parts of a system with Adam Shostack's PHANTOM-B framework.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --panel:#151b24; --panel2:#1b2330; --ink:#e8edf3; --muted:#93a1b3; --line:#283243;
+  --accent:#8b7cf6; --accent2:#2dd4bf; --hi:#f87171; --med:#fbbf24; --lo:#60a5fa;
+  --radius:14px;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f6f7fb; --panel:#ffffff; --panel2:#f0f2f8; --ink:#141a24; --muted:#56637a; --line:#dde2ec;
+    --accent:#5b47e0; --accent2:#0f9488; --hi:#dc2626; --med:#b45309; --lo:#2563eb;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px 80px}
+h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif;line-height:1.15;margin:0 0 .4em}
+h1{font-size:clamp(2.2rem,7vw,3.6rem);letter-spacing:-.02em}
+h2{font-size:1.5rem;margin-top:2em}
+h3{font-size:1.15rem}
+a{color:var(--accent)}
+p{margin:0 0 1em}
+.muted{color:var(--muted)}
+.mono{font-family:"JetBrains Mono",monospace}
+
+header.hero{padding:48px 0 12px}
+.kicker{font:500 .8rem "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2)}
+.letters{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 22px}
+.letters a{display:grid;place-items:center;width:46px;height:46px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font:700 1.3rem "Space Grotesk",sans-serif;color:var(--ink);text-decoration:none;position:relative}
+.letters a.done{border-color:var(--accent2)}
+.letters a.done::after{content:"";position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--accent2)}
+.letters .dash{display:grid;place-items:center;color:var(--muted);font-weight:700}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.four{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:14px 0}
+.four div{background:var(--panel2);border-radius:10px;padding:12px 14px;font-size:.92rem}
+.four b{display:block;font-family:"Space Grotesk",sans-serif;color:var(--accent2)}
+
+label.f{display:block;font-size:.82rem;color:var(--muted);margin:10px 0 4px}
+input[type=text],textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+textarea{min-height:70px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.chips label{display:flex;gap:6px;align-items:center;font-size:.9rem;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+.chips input{accent-color:var(--accent)}
+
+.cat{scroll-margin-top:16px;margin-top:18px}
+.cat-head{display:flex;gap:16px;align-items:flex-start}
+.badge{flex:0 0 auto;display:grid;place-items:center;width:58px;height:58px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font:700 1.8rem "Space Grotesk",sans-serif}
+.cat-head h3{font-size:1.35rem;margin:2px 0 4px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:720px){.cols{grid-template-columns:1fr}}
+.box{background:var(--panel2);border-radius:10px;padding:12px 14px}
+.box h4{margin:0 0 6px;font:600 .78rem "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.box ul{margin:0;padding-left:18px;font-size:.93rem}
+.box li{margin:3px 0}
+.relevant{margin-top:10px;font-size:.85rem;color:var(--accent2)}
+
+.findings{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px}
+.frow{display:grid;grid-template-columns:2fr 1.4fr 110px 36px;gap:8px;margin-bottom:8px;align-items:start}
+@media (max-width:720px){.frow{grid-template-columns:1fr}}
+.frow textarea{min-height:44px}
+.sev-high{border-left:4px solid var(--hi)!important}
+.sev-medium{border-left:4px solid var(--med)!important}
+.sev-low{border-left:4px solid var(--lo)!important}
+button{font:600 .9rem Inter,sans-serif;padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.x{padding:8px 0;width:36px;color:var(--muted)}
+.na{display:flex;gap:8px;align-items:center;font-size:.88rem;color:var(--muted);margin-top:6px}
+
+.toolbar{position:sticky;bottom:0;z-index:5;margin-top:28px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 0}
+.toolbar .in{max-width:980px;margin:0 auto;padding:0 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.toolbar .stat{margin-right:auto;font-size:.9rem;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--accent2);color:#04201c;padding:8px 14px;border-radius:999px;font-weight:600;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.86rem;color:var(--muted)}
+@media print{
+  .toolbar,.letters,button,.na{display:none!important}
+  body{background:#fff;color:#000}
+  .panel{border-color:#ccc;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div class="kicker">CYBERCATION · LLM threat modelling</div>
+    <h1>PHANTOM-B Workshop</h1>
+    <p>A facilitation tool for answering one question fast: <strong>what can go wrong with the LLM parts of this system?</strong> Work through the eight letters as a team, log what you find, and export a write-up in under an hour.</p>
+    <p class="muted">Built on <a href="https://shostack.org/resources/whitepapers" rel="noopener">PHANTOM-B: A STRIDE Analog for LLMs</a> by Adam Shostack (Shostack + Associates), released under a Creative Commons licence. The prompting questions and examples below are CYBERCATION's facilitation notes. Read the whitepaper for the authoritative definitions.</p>
+    <nav class="letters" id="letters" aria-label="Jump to a letter"></nav>
+  </header>
+
+  <section class="panel">
+    <h2 style="margin-top:0">Before you start</h2>
+    <p>PHANTOM-B deliberately covers only the LLM-specific risks. Run it <strong>alongside</strong> STRIDE or your normal SDL review, not instead of it. It slots into the Four Question Framework:</p>
+    <div class="four">
+      <div><b>1. What are we working on?</b>Describe the system and where the LLM sits.</div>
+      <div><b>2. What can go wrong?</b>Walk the eight letters below.</div>
+      <div><b>3. What are we going to do about it?</b>Record a mitigation and owner per finding.</div>
+      <div><b>4. Did we do a good job?</b>Export, review and revisit when the system changes.</div>
+    </div>
+    <p class="muted" style="font-size:.88rem;margin:0">Everything you type stays in this browser. Nothing is sent anywhere. Don't paste secrets or classified detail; use the export to store results somewhere approved.</p>
+  </section>
+
+  <section class="panel" style="margin-top:18px" id="scope">
+    <h2 style="margin-top:0">1 · What are we working on?</h2>
+    <label class="f" for="sysName">System or feature name</label>
+    <input type="text" id="sysName" placeholder="e.g. Trader-desk research assistant">
+    <label class="f" for="sysDesc">What does the LLM do, what data does it see, and what can it act on?</label>
+    <textarea id="sysDesc" placeholder="e.g. Summarises market news and internal research notes; can search SharePoint; drafts emails but cannot send them."></textarea>
+    <label class="f">Can the LLM's output influence what code does?</label>
+    <div class="chips" id="mode"></div>
+    <p class="muted" id="modeNote" style="font-size:.88rem;margin:8px 0 0"></p>
+    <label class="f">Which patterns does it use? <span class="muted">(highlights the letters most likely to matter)</span></label>
+    <div class="chips" id="patterns"></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+      <div><label class="f" for="team">Who's in the room?</label><input type="text" id="team" placeholder="e.g. Product, engineering, security, data science"></div>
+      <div><label class="f" for="date">Date</label><input type="text" id="date"></div>
+    </div>
+  </section>
+
+  <h2>2 · What can go wrong?</h2>
+  <div id="cats"></div>
+
+  <section class="panel cat" id="extra">
+    <div class="cat-head"><div class="badge" style="font-size:1.3rem">+</div><div><h3>Also consider</h3><p class="muted" style="margin:0">Questions that sit just outside the eight letters but come up in almost every LLM review.</p></div></div>
+    <div class="cols">
+      <div class="box"><h4>Where does the prompt data go?</h4><ul>
+        <li>Is the model local, in our cloud tenant, or a third-party service?</li>
+        <li>Are prompts and outputs logged, retained, or used for future training?</li>
+        <li>Could data from one session or customer influence another?</li>
+        <li>What does the provider contract say, and what's the supply-chain risk?</li>
+      </ul></div>
+      <div class="box"><h4>Sandbox it like untrusted code</h4><ul>
+        <li>Fix the input format and validate it before it reaches the model</li>
+        <li>Require a strict output schema and reject anything that doesn't match</li>
+        <li>Limit what the output can reach: no direct path to code execution</li>
+        <li>Assume guardrails will sometimes fail, and cap the blast radius</li>
+      </ul></div>
+    </div>
+    <div class="findings">
+      <label class="f" for="extraNotes">Notes</label>
+      <textarea id="extraNotes" placeholder="Data handling, provider terms, sandboxing decisions…"></textarea>
+    </div>
+  </section>
+
+  <footer>
+    <p>PHANTOM-B is © Shostack + Associates and shared under Creative Commons; see the <a href="https://shostack.org/resources/whitepapers" rel="noopener">official whitepaper</a> and <a href="https://shostack.org/blog/phantom-b-talk-summary/" rel="noopener">Black Hat 2026 talk summary</a>. This independent workshop tool is by CYBERCATION and is not affiliated with or endorsed by Shostack + Associates.</p>
+  </footer>
+</main>
+
+<div class="toolbar"><div class="in">
+  <span class="stat" id="stat">0 of 8 letters covered · 0 findings</span>
+  <button type="button" id="copyMd">Copy as Markdown</button>
+  <button type="button" id="dlMd" class="primary">Download report</button>
+  <button type="button" id="printBtn">Print</button>
+  <button type="button" id="resetBtn">Clear all</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+var PATTERNS = [
+  {id:'chat', label:'Chat assistant'},
+  {id:'rag', label:'Retrieval (RAG) over internal data'},
+  {id:'agent', label:'Agent with tools or actions'},
+  {id:'code', label:'Code generation'},
+  {id:'decide', label:'Decisions about people'},
+  {id:'finetune', label:'Fine-tuned or open-weight model'},
+  {id:'external', label:'Reads email, web or third-party content'}
+];
+
+var CATS = [
+ {k:'P', name:'Prompt injection', rel:['rag','agent','external','chat'],
+  what:'Someone gets the model to do their bidding by slipping instructions into anything it reads: a user message, a retrieved document, an email, a web page or a tool result. The damage scales with what the model is allowed to touch.',
+  ask:['What untrusted text can reach the context window, directly or indirectly?','If the model were fully hijacked, what could it read, change, send or spend?','Does any consequential action happen without a human or a deterministic check in between?','Can output from one user or document influence another user\'s session?'],
+  ideas:['Give tools least privilege and scope them per user, not per app','Require confirmation for side effects (send, pay, delete, merge)','Treat model output as untrusted input to everything downstream; validate it against a strict schema','Separate trusted instructions from retrieved content; filter and tag sources']},
+ {k:'H', name:'Hallucination', rel:['chat','rag','code','decide'],
+  what:'The model produces fluent, confident output that is simply wrong: invented facts, citations, figures, policy, or software packages that don\'t exist (which attackers then register).',
+  ask:['Where is output treated as fact, quoted to customers or fed into another system?','What is the cost of a confident wrong answer here, and who carries it?','Could it invent a library, API, URL or contact that someone then trusts?','Is there a source of truth the output can be checked against?'],
+  ideas:['Ground answers in retrieved sources and show the citations','Verify citations, package names and links automatically','Constrain outputs (schemas, enums) where free text isn\'t needed','Say "I don\'t know" paths explicitly in the design']},
+ {k:'A', name:'Anthropomorphization', rel:['chat','agent'],
+  what:'Treating a token generator as if it understands intent, has values, or can tell a user from an attacker. The classic symptom is a security control written as a polite prompt instruction ("never reveal…", "don\'t do X").',
+  ask:['Are any security or compliance controls implemented only as system-prompt text?','Do we assume the model will "know" when a request is malicious or out of scope?','Will users treat it like a trusted colleague and share more than they should?','Does the persona or tone encourage misplaced trust?'],
+  ideas:['Enforce boundaries in code, permissions and data access, not prompts','Test prompt-only rules as if they will be bypassed, because they will','Design the UI so it is clearly a tool, not a person','Tell users plainly what it can and cannot be trusted with']},
+ {k:'N', name:'Non-explainability', rel:['decide','agent','rag'],
+  what:'You cannot get the real reason behind an output. When asked why it erred, the model produces a plausible story, not its actual cause. That bites in incident response, audit and anywhere you owe someone an explanation.',
+  ask:['Will we ever need to explain a specific output to a regulator, auditor, customer or court?','Could this make or shape a decision about a person (credit, hiring, access, fraud)?','If something goes wrong, what evidence would we have to investigate it?','Are we relying on the model\'s own explanation of its behaviour anywhere?'],
+  ideas:['Log prompts, retrieved context, model version and outputs (with privacy care)','Keep decisions that need explaining in deterministic, auditable logic','Use the LLM to assist a human decision, not to be the decision','Pin model versions and record changes']},
+ {k:'T', name:'Training issues', rel:['finetune','rag','decide'],
+  what:'Problems that come from what the model learned and where it came from: poisoned or low-quality data, memorised sensitive data that can leak back out, unclear provenance, and model supply-chain risk from downloaded weights.',
+  ask:['Where did the model come from, and how do we know it is what it claims to be?','Was it fine-tuned or embedded on our data? Could that data be extracted back out?','Could an attacker influence data that will later be trained or indexed on?','Will users ask about things the model has little or no data on? It will still answer confidently.','Do contracts cover how the provider uses our prompts and outputs?'],
+  ideas:['Verify model provenance; scan and pin downloaded weights','Minimise and clean sensitive data before fine-tuning or indexing','Control who can write to sources that get trained or indexed','Check provider data-use and retention terms']},
+ {k:'O', name:'Overreliance', rel:['chat','code','decide','agent'],
+  what:'People and processes trust the output more than it deserves. "Human in the loop" quietly becomes a rubber stamp at volume, and skills fade where the tool does the thinking.',
+  ask:['Who is meant to check the output, and is that realistic at the expected volume?','What happens when the reviewer is busy, junior or under time pressure?','Will anyone notice if quality slowly degrades after a model update?','Are we losing the in-house skill to do this without the tool?'],
+  ideas:['Design review steps that are meaningful, not ceremonial','Sample and score outputs on an ongoing basis','Show confidence, sources and uncertainty in the UI','Keep manual fallbacks and practise them']},
+ {k:'M', name:'Missing security engineering', rel:['agent','rag','chat','code','external'],
+  what:'The ordinary security engineering that gets skipped because "it\'s AI": access control on retrieval, secrets in prompts, logging, rate limits, cost abuse, data residency and dependency hygiene. This is where PHANTOM-B hands back to STRIDE and your SDL.',
+  ask:['Did this feature go through our normal design review, STRIDE and SDL gates?','Does retrieval respect the user\'s existing permissions, document by document?','Are API keys, credentials or internal URLs in prompts, configs or logs?','Can someone run up cost or exhaust capacity (denial of wallet)?'],
+  ideas:['Run STRIDE on the surrounding system as usual','Enforce per-user authorisation at retrieval and tool level','Keep secrets in a vault; never in prompts','Apply rate limits, quotas and spend alerts']},
+ {k:'B', name:'Bias', rel:['decide','chat','rag'],
+  what:'Outputs that are systematically worse or unfair for some groups of people. Beyond the harm itself, it brings legal exposure (equality and anti-discrimination law, the EU AI Act) and reputational risk.',
+  ask:['Does any output affect people differently (customers, staff, applicants)?','Have we tested quality across languages, names, regions and demographics?','Who would we hear from first if it were treating a group unfairly?','Is there a legal or regulatory duty that applies to this use?'],
+  ideas:['Test with representative cases across groups before launch','Keep humans accountable for decisions about people','Give users a way to challenge or report outcomes','Document the intended use and known limits']}
+];
+
+var KEY = 'phantomb-workshop-v1';
+var state = {sys:{name:'',desc:'',team:'',date:'',patterns:[]}, cats:{}};
+CATS.forEach(function(c){ state.cats[c.k] = {notes:'', na:false, findings:[]}; });
+try { var saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved && saved.cats) state = saved; } catch(e){}
+CATS.forEach(function(c){ if(!state.cats[c.k]) state.cats[c.k] = {notes:'',na:false,findings:[]}; });
+if (!state.sys.date) state.sys.date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} updateStat(); }
+function el(tag, attrs, html){ var e=document.createElement(tag); if(attrs) for(var a in attrs){ if(a==='class') e.className=attrs[a]; else e.setAttribute(a,attrs[a]); } if(html!=null) e.innerHTML=html; return e; }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+// scope bindings
+[['sysName','name'],['sysDesc','desc'],['team','team'],['date','date']].forEach(function(p){
+  var i=document.getElementById(p[0]); i.value=state.sys[p[1]]||''; i.addEventListener('input',function(){ state.sys[p[1]]=i.value; save(); });
+});
+var pw=document.getElementById('patterns');
+PATTERNS.forEach(function(p){
+  var l=el('label'); var cb=el('input',{type:'checkbox',value:p.id}); cb.checked=state.sys.patterns.indexOf(p.id)>-1;
+  cb.addEventListener('change',function(){ var arr=state.sys.patterns; var i=arr.indexOf(p.id); if(cb.checked&&i<0)arr.push(p.id); if(!cb.checked&&i>-1)arr.splice(i,1); save(); renderRelevance(); });
+  l.appendChild(cb); l.appendChild(document.createTextNode(p.label)); pw.appendChild(l);
+});
+
+// transformer vs agent
+var MODES = [
+  {id:'transform', label:'No — it only transforms data (text in, text out)', note:'Lower blast radius. Focus on validating inputs and outputs against a strict schema, and on hallucination, bias and overreliance. Worst case is usually bad output, not bad actions.'},
+  {id:'act', label:'Yes — its output can trigger actions, tools or code', note:'Higher risk: output is tainted data steering execution. Ask how much influence it has (from choosing an option up to running arbitrary code) and how big the blast radius of its privileges is. Sandbox it like any untrusted component.'}
+];
+var mw=document.getElementById('mode');
+function renderModeNote(){ var m=MODES.filter(function(x){return x.id===state.sys.mode;})[0]; document.getElementById('modeNote').textContent = m ? m.note : 'This is the single biggest driver of risk, so settle it first.'; }
+MODES.forEach(function(m){
+  var l=el('label'); var r=el('input',{type:'radio',name:'mode',value:m.id}); r.checked=state.sys.mode===m.id;
+  r.addEventListener('change',function(){ state.sys.mode=m.id; save(); renderModeNote(); });
+  l.appendChild(r); l.appendChild(document.createTextNode(m.label)); mw.appendChild(l);
+});
+renderModeNote();
+
+// letters nav
+var nav=document.getElementById('letters');
+CATS.forEach(function(c,i){ if(i===7){ nav.appendChild(el('span',{class:'dash'},'–')); } nav.appendChild(el('a',{href:'#cat-'+c.k,id:'nav-'+c.k,title:c.name},c.k)); });
+
+// categories
+var wrap=document.getElementById('cats');
+CATS.forEach(function(c){
+  var s=state.cats[c.k];
+  var sec=el('section',{class:'panel cat',id:'cat-'+c.k});
+  sec.innerHTML='<div class="cat-head"><div class="badge">'+c.k+'</div><div><h3>'+esc(c.name)+'</h3><p class="muted" style="margin:0">'+esc(c.what)+'</p><div class="relevant" id="rel-'+c.k+'"></div></div></div>'+
+   '<div class="cols"><div class="box"><h4>Ask the room</h4><ul>'+c.ask.map(function(q){return '<li>'+esc(q)+'</li>';}).join('')+'</ul></div>'+
+   '<div class="box"><h4>Typical responses</h4><ul>'+c.ideas.map(function(q){return '<li>'+esc(q)+'</li>';}).join('')+'</ul></div></div>';
+  var f=el('div',{class:'findings'});
+  f.innerHTML='<label class="f" for="notes-'+c.k+'">Discussion notes</label>';
+  var notes=el('textarea',{id:'notes-'+c.k,placeholder:'What did the team say about '+c.name.toLowerCase()+' in this system?'}); notes.value=s.notes;
+  notes.addEventListener('input',function(){ s.notes=notes.value; save(); });
+  f.appendChild(notes);
+  f.appendChild(el('label',{class:'f'},'Findings: what can go wrong, what we\'ll do about it, and how bad it is'));
+  var list=el('div'); f.appendChild(list);
+  var add=el('button',{type:'button'},'+ Add finding'); f.appendChild(add);
+  var na=el('label',{class:'na'}); var nacb=el('input',{type:'checkbox'}); nacb.checked=s.na; na.appendChild(nacb); na.appendChild(document.createTextNode('Discussed: not applicable to this system')); f.appendChild(na);
+  nacb.addEventListener('change',function(){ s.na=nacb.checked; save(); });
+  function renderList(){
+    list.innerHTML='';
+    s.findings.forEach(function(fd,idx){
+      var row=el('div',{class:'frow'});
+      var t=el('textarea',{placeholder:'Threat: what could go wrong?','aria-label':'Threat'}); t.value=fd.threat||'';
+      var m=el('textarea',{placeholder:'Mitigation and owner','aria-label':'Mitigation'}); m.value=fd.mit||'';
+      var sv=el('select',{'aria-label':'Severity'}); ['high','medium','low'].forEach(function(v){ var o=el('option',{value:v},v[0].toUpperCase()+v.slice(1)); if(fd.sev===v)o.selected=true; sv.appendChild(o); });
+      var x=el('button',{type:'button',class:'x',title:'Remove finding','aria-label':'Remove finding'},'✕');
+      function paint(){ t.className='sev-'+sv.value; }
+      t.addEventListener('input',function(){ fd.threat=t.value; save(); });
+      m.addEventListener('input',function(){ fd.mit=m.value; save(); });
+      sv.addEventListener('change',function(){ fd.sev=sv.value; paint(); save(); });
+      x.addEventListener('click',function(){ s.findings.splice(idx,1); save(); renderList(); });
+      paint();
+      row.appendChild(t); row.appendChild(m); row.appendChild(sv); row.appendChild(x); list.appendChild(row);
+    });
+  }
+  add.addEventListener('click',function(){ s.findings.push({threat:'',mit:'',sev:'medium'}); save(); renderList(); list.lastChild.querySelector('textarea').focus(); });
+  renderList();
+  sec.appendChild(f); wrap.appendChild(sec);
+});
+
+function renderRelevance(){
+  CATS.forEach(function(c){
+    var hits=PATTERNS.filter(function(p){ return state.sys.patterns.indexOf(p.id)>-1 && c.rel.indexOf(p.id)>-1; });
+    document.getElementById('rel-'+c.k).textContent = hits.length ? '● Likely relevant: '+hits.map(function(h){return h.label.toLowerCase();}).join(', ') : '';
+  });
+}
+
+function covered(k){ var s=state.cats[k]; return s.na || s.notes.trim() || s.findings.some(function(f){return (f.threat||'').trim();}); }
+function updateStat(){
+  var n=0, f=0;
+  CATS.forEach(function(c){ var d=covered(c.k); if(d)n++; document.getElementById('nav-'+c.k).classList.toggle('done',!!d); f+=state.cats[c.k].findings.filter(function(x){return (x.threat||'').trim();}).length; });
+  document.getElementById('stat').textContent = n+' of 8 letters covered · '+f+' finding'+(f===1?'':'s');
+}
+
+function markdown(){
+  var s=state.sys, out=[];
+  out.push('# PHANTOM-B threat model: '+(s.name||'Untitled system'));
+  out.push(''); out.push('**Date:** '+(s.date||'')+'  ');
+  if(s.team) out.push('**Participants:** '+s.team+'  ');
+  if(s.patterns.length) out.push('**Patterns:** '+PATTERNS.filter(function(p){return s.patterns.indexOf(p.id)>-1;}).map(function(p){return p.label;}).join(', ')+'  ');
+  var md=MODES.filter(function(x){return x.id===s.mode;})[0];
+  if(md) out.push('**LLM role:** '+(s.mode==='act'?'Agent — output can trigger actions or code':'Data transformer — output cannot trigger actions')+'  ');
+  out.push(''); out.push('## What are we working on?'); out.push(''); out.push(s.desc||'_Not described._');
+  var all=[];
+  out.push(''); out.push('## What can go wrong, and what we will do about it');
+  CATS.forEach(function(c){
+    var d=state.cats[c.k]; out.push(''); out.push('### '+c.k+' — '+c.name);
+    if(d.na) out.push('_Discussed: not applicable._');
+    if(d.notes.trim()){ out.push(''); out.push(d.notes.trim()); }
+    var fs=d.findings.filter(function(f){return (f.threat||'').trim();});
+    if(fs.length){ out.push(''); out.push('| Severity | Threat | Mitigation / owner |'); out.push('|---|---|---|');
+      fs.forEach(function(f){ all.push({c:c.k,f:f}); out.push('| '+f.sev.toUpperCase()+' | '+f.threat.replace(/\n/g,' ').replace(/\|/g,'\\|')+' | '+(f.mit||'').replace(/\n/g,' ').replace(/\|/g,'\\|')+' |'); }); }
+    if(!d.na && !d.notes.trim() && !fs.length) out.push('_Not yet discussed._');
+  });
+  if((state.extra||'').trim()){ out.push(''); out.push('### Also considered: data handling and sandboxing'); out.push(''); out.push(state.extra.trim()); }
+  var hi=all.filter(function(x){return x.f.sev==='high';});
+  out.push(''); out.push('## Summary'); out.push('');
+  out.push('- Findings: '+all.length+' ('+hi.length+' high, '+all.filter(function(x){return x.f.sev==='medium';}).length+' medium, '+all.filter(function(x){return x.f.sev==='low';}).length+' low)');
+  hi.forEach(function(x){ out.push('- **High ('+x.c+'):** '+x.f.threat.replace(/\n/g,' ')); });
+  out.push(''); out.push('## Did we do a good job?'); out.push(''); out.push('Revisit when the model, data sources, tools or users change. Pair with a STRIDE review of the surrounding system.');
+  out.push(''); out.push('---'); out.push('_Framework: PHANTOM-B by Adam Shostack (Shostack + Associates), CC licensed — https://shostack.org/resources/whitepapers. Facilitated with the CYBERCATION PHANTOM-B Workshop._');
+  return out.join('\n');
+}
+function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); setTimeout(function(){t.classList.remove('on');},1800); }
+document.getElementById('copyMd').addEventListener('click',function(){
+  var md=markdown();
+  if(navigator.clipboard){ navigator.clipboard.writeText(md).then(function(){toast('Copied as Markdown');},function(){toast('Copy failed — use Download');}); }
+  else toast('Copy not supported — use Download');
+});
+document.getElementById('dlMd').addEventListener('click',function(){
+  var blob=new Blob([markdown()],{type:'text/markdown'}); var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=((state.sys.name||'phantom-b').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'phantom-b')+'-threat-model.md';
+  document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500); toast('Report downloaded');
+});
+document.getElementById('printBtn').addEventListener('click',function(){ window.print(); });
+document.getElementById('resetBtn').addEventListener('click',function(){
+  if(!confirm('Clear everything on this page? This cannot be undone.')) return;
+  try{ localStorage.removeItem(KEY); }catch(e){} location.reload();
+});
+
+var xn=document.getElementById('extraNotes'); xn.value=state.extra||''; xn.addEventListener('input',function(){ state.extra=xn.value; save(); });
+renderRelevance(); updateStat();
+})();
+</script>
+</body>
+</html>
